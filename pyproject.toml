@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "llm-redteam-harness"
+version = "0.1.0"
+description = "A reproducible LLM red-teaming harness: YAML attack library, rule-based and LLM-as-judge scoring, toggleable defenses, OWASP LLM Top 10 (2025) and MITRE ATLAS mapped reports."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Fidaa Letaief" }]
+requires-python = ">=3.11"
+keywords = ["llm", "security", "red-team", "prompt-injection", "owasp", "mitre-atlas"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Security",
+  "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+  "typer>=0.12",
+  "pydantic>=2.6",
+  "pyyaml>=6.0",
+  "httpx>=0.27",
+  "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+demo = ["fastapi>=0.110", "uvicorn>=0.29"]
+dev = ["pytest>=8.0", "ruff>=0.6", "fastapi>=0.110", "uvicorn>=0.29"]
+
+[project.urls]
+Homepage = "https://github.com/FidaaLetaief/llm-redteam-harness"
+Issues = "https://github.com/FidaaLetaief/llm-redteam-harness/issues"
+
+[project.scripts]
+redteam = "redteam.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/redteam", "demo_app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "."]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["RUF001", "RUF012", "B008"]  # B008: typer.Option defaults are idiomatic
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]

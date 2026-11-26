@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Red-Team Report</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --text: #1d1d1b; --muted: #666660; --line: #e2e1dc;
+  --bad: #c2410c; --bad-bg: #fde8dc; --good: #15803d; --good-bg: #dcf3e3; --accent: #3b5bdb;
+  --bar-before: #e8590c; --bar-after: #2f9e44; --code: #f1f0ec;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161615; --panel: #1f1f1d; --text: #ecebe6; --muted: #a3a29b; --line: #34332f;
+    --bad: #ff8a50; --bad-bg: #3d2416; --good: #5fd38a; --good-bg: #173322; --accent: #8ea6ff;
+    --bar-before: #ff8a50; --bar-after: #5fd38a; --code: #2a2a27;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161615; --panel: #1f1f1d; --text: #ecebe6; --muted: #a3a29b; --line: #34332f;
+  --bad: #ff8a50; --bad-bg: #3d2416; --good: #5fd38a; --good-bg: #173322; --accent: #8ea6ff;
+  --bar-before: #ff8a50; --bar-after: #5fd38a; --code: #2a2a27;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+       font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 1.7rem; margin: 0 0 4px; }
+h2 { font-size: 1.2rem; margin: 36px 0 12px; }
+h3 { font-size: 1.02rem; margin: 24px 0 8px; }
+.sub { color: var(--muted); margin: 0 0 20px; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.meta div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.meta b { display: block; font-size: .75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.kpi .v { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--muted); font-size: .85rem; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+tr:last-child td { border-bottom: 0; }
+.muted { color: var(--muted); }
+.bar { height: 8px; border-radius: 4px; background: var(--line); min-width: 90px; margin-top: 4px; }
+.bar span { display: block; height: 100%; border-radius: 4px; }
+.b { background: var(--bar-before); } .a { background: var(--bar-after); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .78rem; }
+.hit { background: var(--bad-bg); color: var(--bad); } .ok { background: var(--good-bg); color: var(--good); }
+details { margin-top: 4px; } summary { cursor: pointer; color: var(--accent); font-size: .85rem; }
+pre { background: var(--code); padding: 10px; border-radius: 6px; white-space: pre-wrap; word-break: break-word;
+      font-size: .8rem; max-height: 360px; overflow: auto; }
+a { color: var(--accent); }
+.note { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+{% set m = v.before_meta %}{% set a = v.after_meta %}
+<h1>LLM Red-Team Report</h1>
+<p class="sub">{{ m.target }} · {{ m.model }} · tested {{ m.started_at }} UTC</p>
+
+<div class="meta">
+  <div><b>Target</b>{{ m.target }}</div>
+  <div><b>Model</b>{{ m.model }}</div>
+  <div><b>Date (UTC)</b>{{ m.started_at }}</div>
+  <div><b>Runs per case</b>{{ m.runs_per_case }} @ temperature {{ m.temperature }}</div>
+  <div><b>Defenses</b>{{ m.defenses|join(", ") }}{% if a %} → {{ a.defenses|join(", ") }}{% endif %}</div>
+  <div><b>Scoring</b>{{ m.score_mode }}{% if m.judge_model %} ({{ m.judge_model }}){% endif %}</div>
+  <div><b>Frameworks</b>OWASP LLM 2025 · {{ m.atlas_version }}</div>
+  <div><b>Run</b>{{ m.run_id }}</div>
+</div>
+
+{% set ob = v.overall_before %}{% set oa = v.overall_after %}
+<div class="kpis">
+  <div class="kpi"><div class="v">{{ pct(ob.rate) }}</div>
+    <div class="l">Attack success rate, {{ v.before_label }} ({{ ob.successes }}/{{ ob.trials }} runs, CI {{ fmt_ci(*ob.ci) }})</div></div>
+  {% if oa %}
+  <div class="kpi"><div class="v">{{ pct(oa.rate) }}</div>
+    <div class="l">Attack success rate, {{ v.after_label }} ({{ oa.successes }}/{{ oa.trials }} runs, CI {{ fmt_ci(*oa.ci) }})</div></div>
+  {% endif %}
+  <div class="kpi"><div class="v">{{ ob.cases_with_success }}/{{ ob.cases }}</div>
+    <div class="l">Cases with at least one success ({{ v.before_label }}){% if oa %}; {{ oa.cases_with_success }} with defenses{% endif %}</div></div>
+</div>
+
+<h2>By OWASP LLM Top 10 (2025)</h2>
+<div class="scroll"><table>
+<tr><th>ID</th><th>Category</th><th>Cases</th><th>ASR {{ v.before_label }}</th>{% if a %}<th>ASR {{ v.after_label }}</th>{% endif %}</tr>
+{% for r in v.owasp_rows %}
+<tr>
+  <td>{{ r.key }}</td><td>{{ r.name }}</td>
+  {% if not r.covered or r.before is none %}
+  <td class="muted">-</td><td class="muted" colspan="{{ 2 if a else 1 }}">{{ "not covered by this harness" if not r.covered else "no cases run" }}</td>
+  {% else %}
+  <td>{{ r.before.cases }}</td>
+  <td>{{ fmt_group(r.before) }}<div class="bar"><span class="b" style="width: {{ width(r.before.rate) }}%"></span></div></td>
+  {% if a %}<td>{{ fmt_group(r.after) }}<div class="bar"><span class="a" style="width: {{ width(r.after.rate if r.after else none) }}%"></span></div></td>{% endif %}
+  {% endif %}
+</tr>
+{% endfor %}
+</table></div>
+
+<h2>Per-case results</h2>
+{% for owasp_id, rows in v.sections.items() %}
+<h3>{{ owasp_id }} - {{ owasp_name(owasp_id) }}</h3>
+<div class="scroll"><table>
+<tr><th>ID</th><th>Title</th><th>ATLAS</th><th>{{ "Baseline" if a else "Successes" }}</th>{% if a %}<th>Defended</th>{% endif %}<th>Evidence</th></tr>
+{% for r in rows %}
+{% set run = sample_run(r.after if a else r.before) %}
+<tr>
+  <td>{{ r.case_id }}</td>
+  <td>{{ r.title }}<div class="note">{{ r.technique }} · {{ r.severity }}</div></td>
+  <td>{% for t in r.atlas %}<a href="{{ atlas_url(t) }}">{{ t }}</a><br>{% endfor %}</td>
+  <td><span class="pill {{ 'hit' if r.before.successes else 'ok' }}">{{ fmt_case(r.before) }}</span>
+      <div class="note">CI {{ fmt_ci(r.before.ci_low, r.before.ci_high) }}{% if r.before.attempts is not none %} · proposed {{ r.before.attempts }}/{{ r.before.trials }}{% endif %}</div></td>
+  {% if a %}<td>{% if r.after %}<span class="pill {{ 'hit' if r.after.successes else 'ok' }}">{{ fmt_case(r.after) }}</span>
+      <div class="note">CI {{ fmt_ci(r.after.ci_low, r.after.ci_high) }}{% if r.after.attempts is not none %} · proposed {{ r.after.attempts }}/{{ r.after.trials }}{% endif %}</div>{% else %}-{% endif %}</td>{% endif %}
+  <td>{% if run %}<details><summary>sample run #{{ run.index }}{{ " (success)" if run.success else "" }}</summary>
+<pre>{% for h in run.hits if h.matched %}[detector] {{ h.type }}: {{ h.detail }}
+{% endfor %}{% for e in run.defense_events %}[defense] {{ e }}
+{% endfor %}{% if run.error %}[error] {{ run.error }}
+{% endif %}{% for msg in run.transcript if msg.role != "system" %}
+{{ msg.role|upper }}: {{ msg.content[:1200] }}{% for c in msg.tool_calls %}
+  -> tool call {{ c.name }}({{ c.arguments|tojson }}){% endfor %}
+{% endfor %}</pre></details>{% endif %}</td>
+</tr>
+{% endfor %}
+</table></div>
+{% endfor %}
+
+<h2>By MITRE ATLAS technique</h2>
+<div class="scroll"><table>
+<tr><th>Technique</th><th>Name</th><th>Cases</th><th>ASR {{ v.before_label }}</th>{% if a %}<th>ASR {{ v.after_label }}</th>{% endif %}</tr>
+{% for r in v.atlas_rows %}
+<tr><td><a href="{{ atlas_url(r.key) }}">{{ r.key }}</a></td><td>{{ r.name }}</td><td>{{ r.before.cases }}</td>
+<td>{{ fmt_group(r.before) }}</td>{% if a %}<td>{{ fmt_group(r.after) }}</td>{% endif %}</tr>
+{% endfor %}
+</table></div>
+
+{% if v.defense_events %}
+<h2>Defense activity</h2>
+<div class="scroll"><table><tr><th>Event</th><th>Count</th></tr>
+{% for k, n in v.defense_events %}<tr><td>{{ k }}</td><td>{{ n }}</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+
+{% if v.skipped or v.errored %}
+<h2>Skipped and errored cases</h2>
+<ul>
+{% for c in v.skipped %}<li><code>{{ c.case_id }}</code> skipped: {{ c.skipped }}</li>{% endfor %}
+{% for c in v.errored %}<li><code>{{ c.case_id }}</code>: {{ c.errors }} run(s) errored and were excluded from rates.</li>{% endfor %}
+</ul>
+{% endif %}
+
+<p class="note">ASR = successful runs / valid runs; lower is better for the defender. Intervals are 95% Wilson
+score intervals. Rule-based detectors can miss paraphrased leaks and can flag refusals that quote a payload; use
+the LLM-judge mode to cross-check. Only test systems you own or are authorised to test.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,51 @@
+# MITRE ATLAS techniques referenced by the attack library.
+# IDs, names and tactics verified against the ATLAS data release 5.6.0
+# (https://github.com/mitre-atlas/atlas-data). ATLAS renames techniques between releases,
+# so re-verify when you bump `version`.
+version: "5.6.0"
+techniques:
+  AML.T0024:
+    name: Exfiltration via AI Inference API
+    tactics: [Exfiltration]
+  AML.T0048.003:
+    name: "External Harms: User Harm"
+    tactics: [Impact]
+  AML.T0051:
+    name: LLM Prompt Injection
+    tactics: [Execution]
+  AML.T0051.000:
+    name: "LLM Prompt Injection: Direct"
+    tactics: [Execution]
+  AML.T0051.001:
+    name: "LLM Prompt Injection: Indirect"
+    tactics: [Execution]
+  AML.T0053:
+    name: AI Agent Tool Invocation
+    tactics: [Execution, Privilege Escalation]
+  AML.T0054:
+    name: LLM Jailbreak
+    tactics: [Privilege Escalation, Defense Evasion]
+  AML.T0056:
+    name: Extract LLM System Prompt
+    tactics: [Exfiltration]
+  AML.T0057:
+    name: LLM Data Leakage
+    tactics: [Exfiltration]
+  AML.T0068:
+    name: LLM Prompt Obfuscation
+    tactics: [Defense Evasion]
+  AML.T0069.002:
+    name: "Discover LLM System Information: System Prompt"
+    tactics: [Discovery]
+  AML.T0070:
+    name: RAG Poisoning
+    tactics: [Persistence]
+  AML.T0077:
+    name: LLM Response Rendering
+    tactics: [Exfiltration]
+  AML.T0080.001:
+    name: "AI Agent Context Poisoning: Thread"
+    tactics: [Persistence]
+  AML.T0086:
+    name: Exfiltration via AI Agent Tool Invocation
+    tactics: [Exfiltration]

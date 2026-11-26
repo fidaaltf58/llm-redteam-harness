@@ -1,0 +1,45 @@
+# OWASP Top 10 for LLM Applications - 2025 edition
+# Source: https://genai.owasp.org/llm-top-10/
+# `covered` states honestly whether this harness has test cases for the entry.
+version: "2025"
+entries:
+  LLM01:
+    name: Prompt Injection
+    covered: true
+    summary: User or third-party content alters the model's behaviour against the developer's intent (direct, indirect, jailbreaks).
+  LLM02:
+    name: Sensitive Information Disclosure
+    covered: true
+    summary: The application leaks PII, credentials, secrets or confidential business data through model output.
+  LLM03:
+    name: Supply Chain
+    covered: false
+    summary: Compromised models, datasets, adapters or dependencies. Needs SBOM / model provenance tooling, not prompts.
+  LLM04:
+    name: Data and Model Poisoning
+    covered: false
+    summary: Manipulated pre-training, fine-tuning or embedding data. Out of scope for a black-box prompt harness (RAG-document poisoning is tested under LLM01/LLM08).
+  LLM05:
+    name: Improper Output Handling
+    covered: true
+    summary: Model output is passed to browsers, shells or databases without validation (XSS, SQLi, markdown exfiltration).
+  LLM06:
+    name: Excessive Agency
+    covered: true
+    summary: The model can trigger damaging actions through tools because of excessive functionality, permissions or autonomy.
+  LLM07:
+    name: System Prompt Leakage
+    covered: true
+    summary: Secrets or security-relevant rules placed in the system prompt are extracted by users.
+  LLM08:
+    name: Vector and Embedding Weaknesses
+    covered: true
+    summary: Weaknesses in RAG retrieval, e.g. no access control on the vector store or poisoned documents being retrieved.
+  LLM09:
+    name: Misinformation
+    covered: false
+    summary: Hallucinated or misleading output. Requires factuality benchmarks, not adversarial prompts.
+  LLM10:
+    name: Unbounded Consumption
+    covered: false
+    summary: Resource exhaustion / denial of wallet. Not tested on purpose - load testing is a different (and riskier) activity.
