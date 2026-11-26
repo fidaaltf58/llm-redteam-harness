@@ -30,8 +30,8 @@ demo = ["fastapi>=0.110", "uvicorn>=0.29"]
 dev = ["pytest>=8.0", "ruff>=0.6", "fastapi>=0.110", "uvicorn>=0.29"]
 
 [project.urls]
-Homepage = "https://github.com/FidaaLetaief/llm-redteam-harness"
-Issues = "https://github.com/FidaaLetaief/llm-redteam-harness/issues"
+Homepage = "https://github.com/fidaaltf58/llm-redteam-harness"
+Issues = "https://github.com/fidaaltf58/llm-redteam-harness/issues"
 
 [project.scripts]
 redteam = "redteam.cli:app"

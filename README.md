@@ -1,6 +1,6 @@
 # llm-redteam-harness
 
-[![CI](https://github.com/FidaaLetaief/llm-redteam-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/FidaaLetaief/llm-redteam-harness/actions/workflows/ci.yml)
+[![CI](https://github.com/fidaaltf58/llm-redteam-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/fidaaltf58/llm-redteam-harness/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
@@ -285,7 +285,7 @@ CI (GitHub Actions) runs lint, library validation, tests and a CLI smoke run on 
 ## Author
 
 Designed and built by **Fidaa Letaief**, Information Security & Cloud Computing
-engineering student - [github.com/FidaaLetaief](https://github.com/FidaaLetaief).
+engineering student - [github.com/fidaaltf58](https://github.com/fidaaltf58).
 
 ## License
 
